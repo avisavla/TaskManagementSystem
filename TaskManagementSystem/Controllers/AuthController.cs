@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -6,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using TaskManagementSystem.Data;
 using TaskManagementSystem.Model.DTO;
 using TaskManagementSystem.Model.Entities;
+using TaskManagementSystem.Services;
 
 namespace TaskManagementSystem.Controllers
 {
@@ -14,10 +16,12 @@ namespace TaskManagementSystem.Controllers
     public class AuthController : ControllerBase
     {
         private readonly ApplicationDbContext dbContext;
+        private readonly JwtTokenService jwtTokenService;
 
-        public AuthController(ApplicationDbContext dbContext)
+        public AuthController(ApplicationDbContext dbContext,JwtTokenService jwtTokenService)
         {
             this.dbContext = dbContext;
+            this.jwtTokenService = jwtTokenService;
         }
 
         [HttpPost("register")]
@@ -88,7 +92,17 @@ namespace TaskManagementSystem.Controllers
             userEntity.LastLoginAt = DateTime.Now;
             await dbContext.SaveChangesAsync();
 
-            return Ok();
+            var token = jwtTokenService.GenerateToken(userEntity.Id,userEntity.Role.ToString());
+
+            return Ok(new {token});
+        }
+
+        //Temporary endpoint to verify JWT authentication
+        [Authorize]
+        [HttpGet("test")]
+        public IActionResult Test()
+        {
+            return Ok("JWT is working");
         }
     }
 }

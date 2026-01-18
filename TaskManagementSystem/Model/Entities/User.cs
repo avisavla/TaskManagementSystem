@@ -1,5 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using TaskManagementSystem.Enum;
 
 namespace TaskManagementSystem.Model.Entities
 {
@@ -21,6 +23,7 @@ namespace TaskManagementSystem.Model.Entities
         public DateTime CreatedAt { get; set; }     
         public DateTime? LastLoginAt { get; set; }  
 
-        public bool IsActive { get; set; } = true;  
+        public bool IsActive { get; set; } = true;
+        public Role Role { get; set; } = Role.User;
     }
 }
