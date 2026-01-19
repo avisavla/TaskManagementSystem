@@ -104,5 +104,12 @@ namespace TaskManagementSystem.Controllers
         {
             return Ok("JWT is working");
         }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet("admin")]
+        public IActionResult AdminOnly()
+        {
+            return Ok("Admin only is working");
+        }
     }
 }
