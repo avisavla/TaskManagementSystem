@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 using System.Security.Claims;
 using TaskManagementSystem.Data;
@@ -143,6 +144,39 @@ namespace TaskManagementSystem.Controllers
             await dbContext.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> GetPaginatedTaskResult(int pageNo,int pageSize)
+        {
+            if(pageNo<1 || pageSize < 1)
+            {
+                return BadRequest("Invalid pageNo or pageSize");
+            }
+
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var query = dbContext.Tasks.Where(t => t.UserId == userId).OrderBy(t=>t.Id);
+            var totalCount = await query.CountAsync();
+            
+            var paginatedOutput = await query.Skip((pageNo - 1) * pageSize).Take(pageSize).Select
+                (
+                    t => new TaskItemDTO
+                    { 
+                        Name = t.Name,
+                        Description = t.Description,
+                        Id = t.Id,
+                        Status  = t.Status
+                    }
+                ).ToListAsync();
+
+            return Ok(new
+            {
+                PageNo= pageNo,
+                PageSize = pageSize,
+                Items= paginatedOutput,
+                TotalCount =totalCount
+            });
         }
     }
 }
