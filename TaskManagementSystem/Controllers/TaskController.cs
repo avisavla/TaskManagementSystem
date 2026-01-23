@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Azure;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Extensions;
 using Microsoft.Win32;
 using System.Security.Claims;
 using TaskManagementSystem.Data;
@@ -176,6 +178,90 @@ namespace TaskManagementSystem.Controllers
                 PageSize = pageSize,
                 Items= paginatedOutput,
                 TotalCount =totalCount
+            });
+        }
+
+        [Authorize]
+        [HttpGet("FilterByStatus")]
+        public async Task<IActionResult> GetFilteredTasksByStatus([FromQuery] FilterDTO dto)
+        {
+            if (dto.PageNo < 1 || dto.PageSize < 1)
+            {
+                return BadRequest("Invalid pageNo or pageSize");
+            }
+
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+            var query = dbContext.Tasks.
+                Where(t => t.UserId == userId);
+
+            if(!string.IsNullOrWhiteSpace(dto.Status))
+            {
+                if (!System.Enum.TryParse<Status>(dto.Status, true, out var statusEnum))
+                {
+                    return BadRequest("Invalid task status value");
+                }
+
+                query = query.Where(t => t.Status == statusEnum).OrderBy(t => t.Id);
+            }
+            else
+            {
+                return BadRequest("Status is mandatory");
+            }
+            
+            var totalCount = await query.CountAsync();
+            var filteredTasksByStatus = await query.Skip((dto.PageNo - 1) * dto.PageSize).Take(dto.PageSize).Select(
+                    t => new TaskItemDTO
+                    {
+                        Id = t.Id,
+                        Name = t.Name,
+                        Description = t.Description,
+                        Status = t.Status
+                    }).ToListAsync();
+
+            return Ok(new { 
+                Items = filteredTasksByStatus,
+                PageNo = dto.PageNo,
+                PageSize = dto.PageSize,
+                TotalCount = totalCount
+            });
+        }
+
+        [Authorize]
+        [HttpGet("FilterByText")]
+        public async Task<IActionResult> GetFilteredTasksByText([FromQuery] FilterDTO dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Text))
+                return BadRequest("Text Cannot be blank");
+
+            if (dto.PageNo < 1 || dto.PageSize < 1)
+            {
+                return BadRequest("Invalid pageNo or pageSize");
+            }
+
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+            var query = dbContext.Tasks.Where(t => t.UserId == userId);
+
+            query = query.Where(t => t.Name.Contains(dto.Text) || t.Description.Contains(dto.Text)).OrderBy(t => t.Id);
+            
+            var totalCount = await query.CountAsync();
+            var filteredTasksByText = await query.Skip((dto.PageNo - 1) * dto.PageSize).Take(dto.PageSize).Select(
+                t => new TaskItemDTO
+                {
+                    Id = t.Id,
+                    Name = t.Name,
+                    Description= t.Description,
+                    Status = t.Status
+
+                }).ToListAsync();
+
+            return Ok(new
+            {
+                Items = filteredTasksByText,
+                PageNo = dto.PageNo,
+                PageSize = dto.PageSize,
+                TotalCount = totalCount
             });
         }
     }
