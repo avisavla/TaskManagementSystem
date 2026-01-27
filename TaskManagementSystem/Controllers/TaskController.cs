@@ -1,16 +1,11 @@
-﻿using Azure;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Extensions;
-using Microsoft.Win32;
 using System.Security.Claims;
 using TaskManagementSystem.Data;
 using TaskManagementSystem.Enum;
 using TaskManagementSystem.Model.DTO;
 using TaskManagementSystem.Model.Entities;
-using TaskManagementSystem.Services;
 
 namespace TaskManagementSystem.Controllers
 {
@@ -60,7 +55,7 @@ namespace TaskManagementSystem.Controllers
         public async Task<IActionResult> GetTaskById(int id)
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
+            var isAdmin = User.IsInRole("Admin");
             var task = await dbContext.Tasks.FindAsync(id);
 
             if (task == null)
@@ -68,7 +63,7 @@ namespace TaskManagementSystem.Controllers
                 return NotFound();
             }
 
-            if (task.UserId != userId)
+            if (!isAdmin && task.UserId != userId)
             {
                 return Forbid();
             }
@@ -98,7 +93,6 @@ namespace TaskManagementSystem.Controllers
                 return BadRequest("Invalid task status value");
             }
 
-
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
             var task = await dbContext.Tasks.FindAsync(id);
@@ -108,7 +102,8 @@ namespace TaskManagementSystem.Controllers
                 return NotFound();
             }
 
-            if (task.UserId != userId)
+            var isAdmin = User.IsInRole("Admin");
+            if (!isAdmin && task.UserId != userId)
             {
                 return Forbid();
             }
@@ -137,7 +132,8 @@ namespace TaskManagementSystem.Controllers
                 return NotFound();
             }
 
-            if (task.UserId != userId)
+            var isAdmin = User.IsInRole("Admin");
+            if (!isAdmin && task.UserId != userId)
             {
                 return Forbid();
             }
@@ -158,7 +154,12 @@ namespace TaskManagementSystem.Controllers
             }
 
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var query = dbContext.Tasks.Where(t => t.UserId == userId).OrderBy(t=>t.Id);
+            var query = dbContext.Tasks.AsQueryable();
+            var isAdmin = User.IsInRole("Admin");
+            if(!isAdmin)
+                query = query.Where(t => t.UserId == userId);
+
+            query = query.OrderBy(t => t.Id);
             var totalCount = await query.CountAsync();
             
             var paginatedOutput = await query.Skip((pageNo - 1) * pageSize).Take(pageSize).Select
@@ -191,9 +192,10 @@ namespace TaskManagementSystem.Controllers
             }
 
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-            var query = dbContext.Tasks.
-                Where(t => t.UserId == userId);
+            var isAdmin = User.IsInRole("Admin");
+            var query = dbContext.Tasks.AsQueryable();
+            if(!isAdmin)
+                query = query.Where(t => t.UserId == userId);
 
             if(!string.IsNullOrWhiteSpace(dto.Status))
             {
@@ -240,8 +242,10 @@ namespace TaskManagementSystem.Controllers
             }
 
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-            var query = dbContext.Tasks.Where(t => t.UserId == userId);
+            var isAdmin = User.IsInRole("Admin");
+            var query = dbContext.Tasks.AsQueryable();
+            if(!isAdmin)
+                query = query.Where(t => t.UserId == userId);
 
             query = query.Where(t => t.Name.Contains(dto.Text) || t.Description.Contains(dto.Text)).OrderBy(t => t.Id);
             

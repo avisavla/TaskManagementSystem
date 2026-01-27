@@ -1,6 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -97,19 +95,22 @@ namespace TaskManagementSystem.Controllers
             return Ok(new {token});
         }
 
-        //Temporary endpoint to verify JWT authentication
-        [Authorize]
-        [HttpGet("test")]
-        public IActionResult Test()
+        [Authorize(Roles="Admin")]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> MakeAdmin(int id)
         {
-            return Ok("JWT is working");
-        }
+            var user = await dbContext.Users.FindAsync(id);
+            if (user == null)
+                return NotFound("User not found");
 
-        [Authorize(Roles = "Admin")]
-        [HttpGet("admin")]
-        public IActionResult AdminOnly()
-        {
-            return Ok("Admin only is working");
+            if (user.Role == Enum.Role.Admin)
+                return BadRequest("User is already an Admin");
+
+
+            user.Role = Enum.Role.Admin;
+            await dbContext.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }
