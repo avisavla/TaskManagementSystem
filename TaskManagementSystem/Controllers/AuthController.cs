@@ -66,7 +66,7 @@ namespace TaskManagementSystem.Controllers
 
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(LoginDTO dto)
+        public async Task<IActionResult> Login([FromBody]LoginDTO dto)
         {
             if (!ModelState.IsValid)
             {
@@ -92,7 +92,7 @@ namespace TaskManagementSystem.Controllers
 
             var token = jwtTokenService.GenerateToken(userEntity.Id,userEntity.Role.ToString());
 
-            return Ok(new {token});
+            return Ok(new {token=token});
         }
 
         [Authorize(Roles="Admin")]
