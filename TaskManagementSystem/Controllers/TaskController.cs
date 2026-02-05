@@ -146,23 +146,41 @@ namespace TaskManagementSystem.Controllers
 
         [Authorize]
         [HttpGet]
-        public async Task<IActionResult> GetPaginatedTaskResult(int pageNo,int pageSize)
+        public async Task<IActionResult> GetTasks([FromQuery] FilterDTO dto)
         {
-            if(pageNo<1 || pageSize < 1)
+            if(dto.PageNo <1 || dto.PageSize < 1)
             {
                 return BadRequest("Invalid pageNo or pageSize");
             }
 
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if(!int.TryParse(userIdClaim,out int userId))
+                return Unauthorized();
+
             var query = dbContext.Tasks.AsQueryable();
             var isAdmin = User.IsInRole("Admin");
             if(!isAdmin)
                 query = query.Where(t => t.UserId == userId);
 
+            if (!string.IsNullOrWhiteSpace(dto.Status))
+            {
+                if (!System.Enum.TryParse<Status>(dto.Status, true, out var statusEnum))
+                {
+                    return BadRequest("Invalid task status value");
+                }
+
+                query = query.Where(t => t.Status == statusEnum);
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.Text))
+            {
+                query = query.Where(t => t.Name.Contains(dto.Text) || (t.Description!=null && t.Description.Contains(dto.Text)));
+            }
+
             query = query.OrderBy(t => t.Id);
             var totalCount = await query.CountAsync();
             
-            var paginatedOutput = await query.Skip((pageNo - 1) * pageSize).Take(pageSize).Select
+            var result = await query.Skip((dto.PageNo - 1) * dto.PageSize).Take(dto.PageSize).Select
                 (
                     t => new TaskItemDTO
                     { 
@@ -175,97 +193,10 @@ namespace TaskManagementSystem.Controllers
 
             return Ok(new
             {
-                PageNo= pageNo,
-                PageSize = pageSize,
-                Items= paginatedOutput,
+                PageNo= dto.PageNo,
+                PageSize = dto.PageSize,
+                Items= result,
                 TotalCount =totalCount
-            });
-        }
-
-        [Authorize]
-        [HttpGet("FilterByStatus")]
-        public async Task<IActionResult> GetFilteredTasksByStatus([FromQuery] FilterDTO dto)
-        {
-            if (dto.PageNo < 1 || dto.PageSize < 1)
-            {
-                return BadRequest("Invalid pageNo or pageSize");
-            }
-
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var isAdmin = User.IsInRole("Admin");
-            var query = dbContext.Tasks.AsQueryable();
-            if(!isAdmin)
-                query = query.Where(t => t.UserId == userId);
-
-            if(!string.IsNullOrWhiteSpace(dto.Status))
-            {
-                if (!System.Enum.TryParse<Status>(dto.Status, true, out var statusEnum))
-                {
-                    return BadRequest("Invalid task status value");
-                }
-
-                query = query.Where(t => t.Status == statusEnum).OrderBy(t => t.Id);
-            }
-            else
-            {
-                return BadRequest("Status is mandatory");
-            }
-            
-            var totalCount = await query.CountAsync();
-            var filteredTasksByStatus = await query.Skip((dto.PageNo - 1) * dto.PageSize).Take(dto.PageSize).Select(
-                    t => new TaskItemDTO
-                    {
-                        Id = t.Id,
-                        Name = t.Name,
-                        Description = t.Description,
-                        Status = t.Status
-                    }).ToListAsync();
-
-            return Ok(new { 
-                Items = filteredTasksByStatus,
-                PageNo = dto.PageNo,
-                PageSize = dto.PageSize,
-                TotalCount = totalCount
-            });
-        }
-
-        [Authorize]
-        [HttpGet("FilterByText")]
-        public async Task<IActionResult> GetFilteredTasksByText([FromQuery] FilterDTO dto)
-        {
-            if (string.IsNullOrWhiteSpace(dto.Text))
-                return BadRequest("Text Cannot be blank");
-
-            if (dto.PageNo < 1 || dto.PageSize < 1)
-            {
-                return BadRequest("Invalid pageNo or pageSize");
-            }
-
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var isAdmin = User.IsInRole("Admin");
-            var query = dbContext.Tasks.AsQueryable();
-            if(!isAdmin)
-                query = query.Where(t => t.UserId == userId);
-
-            query = query.Where(t => t.Name.Contains(dto.Text) || t.Description.Contains(dto.Text)).OrderBy(t => t.Id);
-            
-            var totalCount = await query.CountAsync();
-            var filteredTasksByText = await query.Skip((dto.PageNo - 1) * dto.PageSize).Take(dto.PageSize).Select(
-                t => new TaskItemDTO
-                {
-                    Id = t.Id,
-                    Name = t.Name,
-                    Description= t.Description,
-                    Status = t.Status
-
-                }).ToListAsync();
-
-            return Ok(new
-            {
-                Items = filteredTasksByText,
-                PageNo = dto.PageNo,
-                PageSize = dto.PageSize,
-                TotalCount = totalCount
             });
         }
     }
