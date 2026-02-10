@@ -29,6 +29,11 @@ namespace TaskManagementSystem.Controllers
                 return BadRequest(ModelState);
             }
 
+            var query = dbContext.Tasks.AsQueryable();
+            if (query.Where(t=>t.Name == dto.Name).Any())
+            {
+                return BadRequest("Task with given name already exists");
+            }
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
             var taskItemEntity = new TaskItem
@@ -91,6 +96,11 @@ namespace TaskManagementSystem.Controllers
             if (!System.Enum.IsDefined(typeof(Status),dto.Status))
             {
                 return BadRequest("Invalid task status value");
+            }
+            var query = dbContext.Tasks.AsQueryable();
+            if (query.Where(t => t.Name == dto.Name && t.Id != dto.Id).Any())
+            {
+                return BadRequest("Task with given name already exists");
             }
 
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
