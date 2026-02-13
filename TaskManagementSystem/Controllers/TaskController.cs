@@ -142,6 +142,11 @@ namespace TaskManagementSystem.Controllers
                 return NotFound();
             }
 
+            if(task.Status == Status.InProgress)
+            {
+                return Conflict();
+            }
+
             var isAdmin = User.IsInRole("Admin");
             if (!isAdmin && task.UserId != userId)
             {
