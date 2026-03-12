@@ -1,107 +1,105 @@
-Task Management System
+Task Management System – Backend API
 
-A full-stack Task Management System built using Angular and .NET 8 Web API.
-The application allows users to authenticate, manage tasks, and track task status with filtering and pagination.
+.NET 8 Web API backend for the Task Management System.
 
-This project demonstrates JWT authentication, route protection, CRUD operations, REST API design, and error handling.
+This API provides authentication and task management endpoints used by the Angular frontend.
 
-----------------------------------------------------------------------------------------------------------------------
+It implements JWT authentication, CRUD operations, pagination, filtering, and validation handling.
+
+----------------------------------------------------------------------------------------------------------------------------------------------
+
 Table of Contents
 
 1. Project Overview
 2. Tech Stack
 3. Features
 4. Task Workflow
-5. Screenshots
-6. Project Structure
-7. API Endpoints
-8. Setup Instructions
-9. Authentication Flow
-10. Error Handling
-11. Future Improvements
-12. Author
-13. License
+5. Project Structure
+6. API Endpoints
+7. Setup Instructions
+8. Authentication Flow
+9. Error Handling
+10. Frontend Repository
+11. Author
+12. License
 
-----------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------
 
 1. Project Overview
 
-The Task Management System allows authenticated users to manage tasks efficiently.
+The backend API is built using ASP.NET Core (.NET 8).
 
-Users can:
+It handles:
 
-* Log in using JWT authentication
-* Create, update, and delete tasks
-* View tasks with pagination
-* Filter tasks by status
-* Search tasks using text filtering
+* User authentication
+* Task management
+* Database access
+* Business rule validation
+* Secure API endpoints using JWT
 
-The application is built with a separated frontend and backend architecture using Angular and .NET.
+The API communicates with the Angular frontend through REST endpoints.
 
-----------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------
 
 2. Tech Stack
 
-Frontend
-
-* Angular
-* Angular Forms
-* Angular Routing
-* Angular HTTP Client
-* Angular Material (Loading Spinner)
-
-Backend
+Backend Framework
 
 * .NET 8 Web API
-* Entity Framework Core
-* SQL Server
-* JWT Authentication
-* Swagger (API Documentation)
 
-## Tools
+Database
+
+* SQL Server
+* Entity Framework Core
+
+Authentication
+
+* JWT Authentication
+
+Documentation
+
+* Swagger 
+
+Tools
 
 * Git
 * GitHub
 
-----------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------
 
 3. Features
 
 Authentication
 
 * User Login
-* JWT Token Generation
-* Secure API access
-* Logout functionality
-* Route protection using Angular Auth Guard
-* HTTP Interceptor for attaching Authorization header
+* User Registration
+* JWT Token generation
+* Secure API endpoints
 
 Task Management
 
 * Create Task
-* Edit Task
+* Update Task
 * Delete Task
-* View Task List
+* Get task list
 
 Task Controls
 
 * Pagination
-* Page size selection
 * Status filtering
 * Text search
 
 Validation and Error Handling
 
-* Form validation
-* Server validation error handling
-* API error handling
-* User friendly error messages
+* Model validation
+* Business rule validation
+* Proper HTTP status codes
 
-----------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------
 
 4. Task Workflow
 
-Tasks follow a simple lifecycle.
+Tasks follow a lifecycle.
 
 | Status     | Value |
 | ---------- | ----- |
@@ -113,60 +111,32 @@ Business Rules:
 
 * Newly created tasks are automatically Pending
 * Tasks cannot be deleted unless Completed
-* API returns 409 Conflict if deletion is attempted on restricted tasks
+* API returns 409 Conflict if deletion rule is violated
 
-----------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------
 
-5. Screenshots
-
-screenshots folder is inside task-management-ui repo 
-
-Login Page=>(screenshots/login.png)
-
-Task List=>(screenshots/taskList.png)
-
-Create Task=>(screenshots/createTask.png)
-
-Edit Task=>(screenshots/editTask.png)
-
-----------------------------------------------------------------------------------------------------------------------
-
-6. Project Structure
-
-Frontend (Angular)
-
-src/app
-core
-* guards
-* interceptors
-features
-* auth
-  * login
-  * register
-* tasks
-  * task-list
-  * create-task
-  * edit-task
-services
-models
-
-----------------------------------------------------------------------------------------------------------------------
-
-Backend (.NET)
+5. Project Structure
 
 Controllers
+
 * AuthController
 * TasksController
+
 Services
+
 * JwtTokenService
+
 Data
+
 * ApplicationDbContext
+
 Models
+
 DTOs
 
-----------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------
 
-7. API Endpoints
+6. API Endpoints
 
 Authentication
 
@@ -176,38 +146,43 @@ Login user and return JWT token.
 POST /api/auth/register
 Register a new user.
 
-----------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------
 
 Tasks
 
 GET /api/tasks
+
 Fetch tasks with pagination and filters.
 
 Query parameters:
+
 pageNo
 pageSize
 status
 text
 
-Example:
+Example
+
 GET /api/tasks?pageNo=1&pageSize=5&status=Pending&text=test
 
-----------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------
 
 POST /api/tasks
+
 Create a new task.
 
-Request Body Example:
+Example request body
 
 {
 "name": "Sample Task",
 "description": "Task description"
 }
 
-----------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------
 
 PUT /api/tasks/{id}
-Update task.
+
+Update task
 
 {
 "name": "Updated Task",
@@ -215,86 +190,69 @@ Update task.
 "status": "Completed"
 }
 
-----------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------
 
 DELETE /api/tasks/{id}
 
 Delete task.
-Business rule:
+
+Rule:
 
 Only Completed tasks can be deleted.
-If not, API returns 409 Conflict.
+Otherwise API returns 409 Conflict.
 
-----------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------
 
-8. Setup Instructions
+7. Setup Instructions
 
-Clone the Repositories
-
-Clone both backend and frontend repositories:
+Clone the backend repository
 
 git clone https://github.com/avisavla/TaskManagementSystem.git
-git clone https://github.com/avisavla/task-management-ui.git
 
-Navigate to the backend project:
+Navigate to project
 
 cd TaskManagementSystem
 
-----------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------
 
-Backend Setup (.NET API)
+Configure Database
 
-Navigate to backend folder:cd backend
-
-Update the connection string inside appsettings.json:
+Update connection string in appsettings.json
 
 "ConnectionStrings": {
 "DefaultConnection": "your_sql_connection_string"
 }
 
-Run database migration:dotnet ef database update
+----------------------------------------------------------------------------------------------------------------------------------------------
 
-Run backend API:dotnet run
+Run Database Migration
 
-Backend will run on:https://localhost:44380
+dotnet ef database update
 
-----------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------
 
-Frontend Setup (Angular)
+Run API
 
-Navigate to the frontend repository:cd task-management-ui
+dotnet run
 
-Install dependencies:npm install
+Backend runs on
 
-Run Angular application:ng serve
+https://localhost:44380
 
-Application will run at:http://localhost:4200
+----------------------------------------------------------------------------------------------------------------------------------------------
 
-----------------------------------------------------------------------------------------------------------------------
+8. Authentication Flow
 
-Application Access
-
-Backend API: https://localhost:44380
-Frontend UI: http://localhost:4200
-
-
-----------------------------------------------------------------------------------------------------------------------
-
-9. Authentication Flow
-
-1. User logs in
+1. User sends login request
 2. API validates credentials
-3. API returns JWT token
-4. Token stored in browser
-5. Angular HTTP interceptor attaches token to requests
-6. Backend validates token for protected endpoints
-7. Logout clears token
+3. API generates JWT token
+4. Client stores token
+5. Client sends token in Authorization header
+6. API validates token before allowing access
 
-----------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------
 
-10. Error Handling
-
-The application handles common API errors.
+9. Error Handling
 
 | Status Code | Meaning                            |
 | ----------- | ---------------------------------- |
@@ -304,26 +262,24 @@ The application handles common API errors.
 | 409         | Conflict (business rule violation) |
 | 500         | Server error                       |
 
-----------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------
 
-11. Future Improvements
+10. Frontend Repository
 
-Possible enhancements:
+Angular UI repository:
 
-* Toast notifications
-* Responsive design
-* Unit tests
-* Docker support
-* Deployment to cloud
+https://github.com/avisavla/task-management-ui
 
-----------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------
 
-12. Author - Avi Savla
+11. Author
 
-Developed as a full-stack learning project using Angular and .NET 8.
+Avi Savla
 
-----------------------------------------------------------------------------------------------------------------------
+Backend built using ASP.NET Core (.NET 8) as part of a full-stack learning project.
 
-13. License
+----------------------------------------------------------------------------------------------------------------------------------------------
+
+12. License
 
 This project is open source and available under the MIT License.
